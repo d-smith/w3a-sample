@@ -102,6 +102,10 @@ function App() {
             text: "Enter Recovery Share",
             value: "recoveryShare"
           },
+          totpShare: {
+            text: "Enter TOTP Share",
+            value: "totpShare"
+          },
           resetAccount : {
             text: "CRITICAL Reset Account",
             value: "resetAccount"
@@ -135,6 +139,15 @@ function App() {
                 }
               });
               break;
+
+              case "totpShare":
+                swal('Enter TOTP Share', {
+                  content: 'input' as any,
+                }).then(async value => {
+                  swal('Error', 'not implemented yet', 'error');
+                });
+                break;
+                
 
               case "resetAccount":
                 resetAccount();
