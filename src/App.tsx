@@ -241,7 +241,7 @@ function App() {
     }
 
     let otpauth = totp.keyuri(
-      encodeURIComponent(user.email), 'Web3Auth', secret); 
+      encodeURIComponent(user.email), encodeURIComponent('w3a-sample'), secret); 
     console.log('addTOTPShare');
     console.log(otpauth);
 
