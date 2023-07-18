@@ -3,6 +3,10 @@ import swal from "sweetalert";
 import { Web3AuthMPCCoreKit, WEB3AUTH_NETWORK } from "@web3auth/mpc-core-kit"
 import Web3 from "web3";
 import "./App.css";
+import { QRCode, ErrorCorrectLevel, QRNumber, QRAlphaNum, QR8BitByte, QRKanji } from 'qrcode-generator-ts/js';
+import { totp } from '@otplib/preset-default';
+
+const secret = 'UDQLARCPNZQUYMLXOVYDSQKJKZDTSRLD';
 
 const uiConsole = (...args: any[]): void => {
   const el = document.querySelector("#console>p");
@@ -103,7 +107,7 @@ function App() {
             value: "recoveryShare"
           },
           totpShare: {
-            text: "Enter TOTP Share",
+            text: "Enter TOTP Token",
             value: "totpShare"
           },
           resetAccount : {
@@ -141,7 +145,7 @@ function App() {
               break;
 
               case "totpShare":
-                swal('Enter TOTP Share', {
+                swal('Enter TOTP Token', {
                   content: 'input' as any,
                 }).then(async value => {
                   swal('Error', 'not implemented yet', 'error');
@@ -197,8 +201,71 @@ function App() {
     uiConsole(share);
   }
 
+  function createCanvas(qr : QRCode, cellSize = 2, margin = cellSize * 4) {
+
+    var canvas = document.createElement('canvas');
+    var size = qr.getModuleCount() * cellSize + margin * 2;
+    canvas.width = size;
+    canvas.height = size;
+    var ctx = canvas.getContext('2d');
+    //check ctx is not null
+    if (!ctx) {
+      throw new Error('ctx is null');
+    }
+
+    // fill background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size, size);
+
+    // draw cells
+    ctx.fillStyle = '#000000';
+    for (var row = 0; row < qr.getModuleCount(); row += 1) {
+      for (var col = 0; col < qr.getModuleCount(); col += 1) {
+        if (qr.isDark(row, col) ) {
+          ctx.fillRect(
+            col * cellSize + margin,
+            row * cellSize + margin,
+            cellSize, cellSize);
+        }
+      }
+    }
+    return canvas;
+  }
+
+
+
   const addTOTPShare = async (): Promise<void> => {
+    const user = coreKitInstance?.getUserInfo();
+    if(!user || !user.email) {  
+      throw new Error('user is not set.');  
+    }
+
+    let otpauth = totp.keyuri(
+      encodeURIComponent(user.email), 'Web3Auth', secret); 
     console.log('addTOTPShare');
+    console.log(otpauth);
+
+    //Display a QR code using the otpauth string
+    var qr = new QRCode();
+    qr.setTypeNumber(10);
+    qr.setErrorCorrectLevel(ErrorCorrectLevel.L);
+    let utf8Encode = new TextEncoder();
+    //qr.addData(new QRAlphaNum(otpauth) );
+    qr.addData(otpauth);
+
+    console.log("make qr code");
+    qr.make();
+    
+    console.log("make canvas");
+    var canvas = createCanvas(qr);
+    var imgElement = document.createElement("img");
+    imgElement.setAttribute('src', qr.toDataURL()); 
+    document.body.appendChild(createCanvas(qr, 2));
+
+    
+
+
+
   }
 
   const newPasswordShare = async () => {
