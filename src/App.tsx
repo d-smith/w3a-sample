@@ -147,7 +147,7 @@ function App() {
                   swal('Error', 'not implemented yet', 'error');
                 });
                 break;
-                
+
 
               case "resetAccount":
                 resetAccount();
@@ -195,6 +195,10 @@ function App() {
     const share = await coreKitInstance?.exportBackupShare();
     console.log(share);
     uiConsole(share);
+  }
+
+  const addTOTPShare = async (): Promise<void> => {
+    console.log('addTOTPShare');
   }
 
   const newPasswordShare = async () => {
@@ -388,6 +392,9 @@ function App() {
 
         <button onClick={exportShare} className="card">
           Export Backup Share
+        </button>
+        <button onClick={addTOTPShare} className="card">
+          Add TOTP Share
         </button>
         <button onClick={newPasswordShare} className="card">
           New Password Share
