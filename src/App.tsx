@@ -192,6 +192,15 @@ function App() {
     uiConsole('reset account successful');
   }
 
+  const deleteLocalShare = async (): Promise<void> => {
+    if (!coreKitInstance) {
+      throw new Error("coreKitInstance is not set");
+    }
+    localStorage.removeItem('corekit_store');
+    uiConsole('deleted');
+  }
+    
+
   const exportShare = async (): Promise<void> => {
     if (!provider) {
       throw new Error('provider is not set.');
@@ -200,6 +209,19 @@ function App() {
     console.log(share);
     uiConsole(share);
   }
+
+  const createTOTPShare = async (): Promise<void> => {
+    if (!provider) {
+      throw new Error('provider is not set.');
+    }
+    const share = await coreKitInstance?.exportBackupShare();
+    if (!share) {
+      throw new Error('share is not set.');
+    } 
+    localStorage.setItem('totp_share', share);
+    uiConsole('totp share saved');
+  }
+
 
   function createCanvas(qr : QRCode, cellSize = 2, margin = cellSize * 4) {
 
@@ -234,7 +256,7 @@ function App() {
 
 
 
-  const addTOTPShare = async (): Promise<void> => {
+  const showTOTPQRCode = async (): Promise<void> => {
     const user = coreKitInstance?.getUserInfo();
     if(!user || !user.email) {  
       throw new Error('user is not set.');  
@@ -460,8 +482,11 @@ function App() {
         <button onClick={exportShare} className="card">
           Export Backup Share
         </button>
-        <button onClick={addTOTPShare} className="card">
-          Add TOTP Share
+        <button onClick={createTOTPShare} className="card">
+          Create TOTP Share
+        </button>
+        <button onClick={showTOTPQRCode} className="card">
+          Show TOTP QR Code
         </button>
         <button onClick={newPasswordShare} className="card">
           New Password Share
@@ -471,6 +496,9 @@ function App() {
         </button>
         <button onClick={deletePasswordShare} className="card">
           Delete Password Share
+        </button>
+        <button onClick={deleteLocalShare} className="card">
+          Delete Local Share
         </button>
         <button onClick={resetAccount} className="card">
           CRITICAL Reset Account
