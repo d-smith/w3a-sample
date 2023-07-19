@@ -3,7 +3,7 @@ import swal from "sweetalert";
 import { Web3AuthMPCCoreKit, WEB3AUTH_NETWORK } from "@web3auth/mpc-core-kit"
 import Web3 from "web3";
 import "./App.css";
-import { QRCode, ErrorCorrectLevel, QRNumber, QRAlphaNum, QR8BitByte, QRKanji } from 'qrcode-generator-ts/js';
+import { QRCode, ErrorCorrectLevel} from 'qrcode-generator-ts/js';
 import { authenticator } from '@otplib/preset-default';
 
 // For demo - you'd want a secret per user
@@ -100,14 +100,7 @@ function App() {
         text: "You can choose between your backup share or your security question share",
         icon: "warning",
         buttons: {
-          password: {
-            text: "Enter Password",
-            value: "password"
-          },
-          recoveryShare: {
-            text: "Enter Recovery Share",
-            value: "recoveryShare"
-          },
+          
           totpShare: {
             text: "Enter TOTP Token",
             value: "totpShare"
@@ -122,29 +115,7 @@ function App() {
       })
         .then((value) => {
           switch (value) {
-            case "password":
-              swal('Enter password (>10 characters)', {
-                content: 'input' as any,
-              }).then(async value => {
-                if (value.length > 10) {
-                  resetViaPassword(value);
-                } else {
-                  swal('Error', 'Password must be >= 11 characters', 'error');
-                }
-              });
-              break;
-
-            case "recoveryShare":
-              swal('Enter recovery share', {
-                content: 'input' as any,
-              }).then(async value => {
-                if (value.length > 10) {
-                  submitBackupShare(value);
-                } else {
-                  swal('Error', 'recovery share must be >= 11 characters', 'error');
-                }
-              });
-              break;
+            
 
               case "totpShare":
                 swal('Enter TOTP Token', {
@@ -211,14 +182,7 @@ function App() {
   }
     
 
-  const exportShare = async (): Promise<void> => {
-    if (!provider) {
-      throw new Error('provider is not set.');
-    }
-    const share = await coreKitInstance?.exportBackupShare();
-    console.log(share);
-    uiConsole(share);
-  }
+ 
 
   const createTOTPShare = async (): Promise<void> => {
     if (!provider) {
@@ -297,8 +261,6 @@ function App() {
     var qr = new QRCode();
     qr.setTypeNumber(10);
     qr.setErrorCorrectLevel(ErrorCorrectLevel.L);
-    let utf8Encode = new TextEncoder();
-    //qr.addData(new QRAlphaNum(otpauth) );
     qr.addData(otpauth);
 
     console.log("make qr code");
@@ -314,66 +276,15 @@ function App() {
 
   }
 
-  const newPasswordShare = async () => {
-    swal('Enter password (>10 characters)', {
-      content: 'input' as any,
-    }).then(async value => {
-      if (value.length > 10) {
-        addSecurityQuestionShare(value);
-      } else {
-        swal('Error', 'Password must be >= 11 characters', 'error');
-      }
-    });
-  }
-
-  const addSecurityQuestionShare = async (password: string) => {
-    try {
-      if (!coreKitInstance) {
-        throw new Error("coreKitInstance is not set");
-      }
-      await coreKitInstance.addSecurityQuestionShare("What is your password?", password);
-      uiConsole('saved');
-    } catch (err) {
-      uiConsole(err);
-    }
-  }
-
-  const updatePasswordShare = async () => {
-    swal('Enter password (>10 characters)', {
-      content: 'input' as any,
-    }).then(async value => {
-      if (value.length > 10) {
-        changeSecurityQuestionShare(value);
-      } else {
-        swal('Error', 'Password must be >= 11 characters', 'error');
-      }
-    });
-  }
+  
 
 
-  const changeSecurityQuestionShare = async (password: string) => {
-    try {
-      if (!coreKitInstance) {
-        throw new Error("coreKitInstance is not set");
-      }
-      await coreKitInstance.changeSecurityQuestionShare("What is your password?", password);
-      uiConsole('updated');
-    } catch (err) {
-      uiConsole(err);
-    }
-  }
+  
 
-  const deletePasswordShare = async () => {
-    try {
-      if (!coreKitInstance) {
-        throw new Error("coreKitInstance is not set");
-      }
-      await coreKitInstance.deleteSecurityQuestionShare("What is your password?");
-      uiConsole('deleted');
-    } catch (err) {
-      uiConsole(err);
-    }
-  }
+
+ 
+
+ 
 
   const logout = async () => {
     if (!coreKitInstance) {
@@ -503,9 +414,7 @@ function App() {
       <h2 className="subtitle">Recovery/ Key Manipulation</h2>
       <div className="flex-container">
 
-        <button onClick={exportShare} className="card">
-          Export Backup Share
-        </button>
+        
         <button onClick={createTOTPShare} className="card">
           Create TOTP Share
         </button>
@@ -515,15 +424,7 @@ function App() {
         <button onClick={checkTOTP} className="card">
           Check TOTP
         </button>
-        <button onClick={newPasswordShare} className="card">
-          New Password Share
-        </button>
-        <button onClick={updatePasswordShare} className="card">
-          Update Password Share
-        </button>
-        <button onClick={deletePasswordShare} className="card">
-          Delete Password Share
-        </button>
+       
         <button onClick={deleteLocalShare} className="card">
           Delete Local Share
         </button>
