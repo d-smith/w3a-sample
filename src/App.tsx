@@ -4,9 +4,11 @@ import { Web3AuthMPCCoreKit, WEB3AUTH_NETWORK } from "@web3auth/mpc-core-kit"
 import Web3 from "web3";
 import "./App.css";
 import { QRCode, ErrorCorrectLevel, QRNumber, QRAlphaNum, QR8BitByte, QRKanji } from 'qrcode-generator-ts/js';
-import { totp } from '@otplib/preset-default';
+import { authenticator } from '@otplib/preset-default';
 
-const secret = 'UDQLARCPNZQUYMLXOVYDSQKJKZDTSRLD';
+// For demo - you'd want a secret per user
+//const secret = authenticator.generateSecret();
+const secret = 'MQMA6XZDEQ7T4ELV';
 
 const uiConsole = (...args: any[]): void => {
   const el = document.querySelector("#console>p");
@@ -148,7 +150,15 @@ function App() {
                 swal('Enter TOTP Token', {
                   content: 'input' as any,
                 }).then(async value => {
-                  swal('Error', 'not implemented yet', 'error');
+                  console.log(`TOTP Token: ${value}`);
+                  let isValid = authenticator.check(value, secret);
+                  console.log(`Valid TOTP Token: ${isValid}`);
+                  if (isValid) {
+                    submitBackupShare(localStorage.getItem('totp_share') || '');
+                  }
+                  else {                  
+                    swal('Error', 'Invalid token', 'error');
+                  }
                 });
                 break;
 
@@ -222,6 +232,22 @@ function App() {
     uiConsole('totp share saved');
   }
 
+  const checkTOTP = async (): Promise<void> => {
+    swal('Enter TOTP Token', {
+      content: 'input' as any,
+    }).then(async value => {
+     
+      console.log(`TOTP Token: ${value}`);
+      let isValid = authenticator.check(value, secret);
+      console.log(`Valid TOTP Token: ${isValid}`);
+      uiConsole(`Valid TOTP Token: ${isValid}`);
+
+      const token = authenticator.generate(secret);
+      let localValid = authenticator.check(token, secret);
+      console.log(`Valid sample TOTP Token ${token}: ${localValid}`);
+    });
+  }
+
 
   function createCanvas(qr : QRCode, cellSize = 2, margin = cellSize * 4) {
 
@@ -262,8 +288,8 @@ function App() {
       throw new Error('user is not set.');  
     }
 
-    let otpauth = totp.keyuri(
-      encodeURIComponent(user.email), encodeURIComponent('w3a-sample'), secret); 
+    let otpauth = authenticator.keyuri(
+      user.email, 'w3a-sample', secret); 
     console.log('addTOTPShare');
     console.log(otpauth);
 
@@ -278,8 +304,6 @@ function App() {
     console.log("make qr code");
     qr.make();
     
-    console.log("make canvas");
-    var canvas = createCanvas(qr);
     var imgElement = document.createElement("img");
     imgElement.setAttribute('src', qr.toDataURL()); 
     document.body.appendChild(createCanvas(qr, 2));
@@ -487,6 +511,9 @@ function App() {
         </button>
         <button onClick={showTOTPQRCode} className="card">
           Show TOTP QR Code
+        </button>
+        <button onClick={checkTOTP} className="card">
+          Check TOTP
         </button>
         <button onClick={newPasswordShare} className="card">
           New Password Share
