@@ -147,14 +147,7 @@ function App() {
     }
   }
 
-  const resetViaPassword = async (password: string) => {
-    if (!coreKitInstance) {
-      throw new Error("coreKitInstance is not set");
-    }
-    await coreKitInstance.recoverSecurityQuestionShare("What is your password?", password);
-    uiConsole('submitted');
-    if (coreKitInstance.provider) setProvider(coreKitInstance.provider);
-  }
+ 
 
   const submitBackupShare = async (seedPhrase: string): Promise<void> => {
     if (!coreKitInstance) {
@@ -380,7 +373,7 @@ function App() {
     const web3 = new Web3(provider);
     const fromAddress = (await web3.eth.getAccounts())[0];
 
-    const destination = "0x2E464670992574A613f10F7682D5057fB507Cc21";
+    const destination = "0xA30Df2957194F42D5d684FC85D5885E38AFcE685";
     const amount = web3.utils.toWei("0.0001"); // Convert 1 ether to wei
 
     // Submit transaction to the blockchain and wait for it to be mined
