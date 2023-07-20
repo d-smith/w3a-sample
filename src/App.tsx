@@ -258,15 +258,12 @@ function App() {
 
     console.log("make qr code");
     qr.make();
-    
-    var imgElement = document.createElement("img");
-    imgElement.setAttribute('src', qr.toDataURL()); 
-    document.body.appendChild(createCanvas(qr, 2));
 
-    
-
-
-
+    swal({
+      title: "TOTP QR Code",  
+      text: "Scan this QR code with your authenticator app",
+      icon: qr.toDataURL(),   
+    });
   }
 
   
