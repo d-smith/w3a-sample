@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import swal from "sweetalert";
-import { Web3AuthMPCCoreKit, WEB3AUTH_NETWORK } from "@web3auth/mpc-core-kit"
+import { Web3AuthMPCCoreKit, WEB3AUTH_NETWORK, UserInfo } from "@web3auth/mpc-core-kit"
 import Web3 from "web3";
 import "./App.css";
 import { QRCode, ErrorCorrectLevel} from 'qrcode-generator-ts/js';
 import { authenticator } from '@otplib/preset-default';
+import axios from 'axios'
+import { userInfo } from "os";
+import { get } from "http";
+
 
 // For demo - you'd want a secret per user
 //const secret = authenticator.generateSecret();
@@ -237,6 +241,58 @@ function App() {
     return canvas;
   }
 
+  const getSecret = async (user: UserInfo) => {
+   
+    let s = await axios.get('http://localhost:4001/users/secret/' + user.email);
+    if(s.data.length == 0|| !s.data[0].secret) {
+      throw new Error('secret is not set.');
+    } else {
+      return s.data[0].secret;
+    }
+  }
+  
+  const hasSecret = async (user: UserInfo)  => {
+    getSecret(user)
+    .then((secret) => {
+      console.log('secret found')
+      return true;
+    })
+    .catch((err) => {
+      console.log('secret not found')
+      return false;
+    });
+  }
+
+  const storeSecret = async (user: UserInfo, secret: string) => {
+    axios.put('http://localhost:4001/users/secret/' + user.email, {
+      email: user.email,
+      secret: secret
+    })
+    .then((res) => {
+      console.log(`statusCode: ${res.status}`)
+      console.log(res)
+    })  
+  };
+
+  const getOrCreateSecret = async (user:UserInfo) : Promise<string> => {
+    return getSecret(user)
+    .then((secret) => {
+      console.log('secret found')
+      return secret;
+    })
+    .catch( async (err) => {
+      console.log('secret not found');
+      let secret = authenticator.generateSecret();
+      await storeSecret(user, secret);
+      return secret;
+    });
+  };
+
+
+
+
+
+  
 
 
   const showTOTPQRCode = async (): Promise<void> => {
@@ -244,6 +300,9 @@ function App() {
     if(!user || !user.email) {  
       throw new Error('user is not set.');  
     }
+
+    let secret = await getOrCreateSecret(user);
+    console.log(secret);
 
     let otpauth = authenticator.keyuri(
       user.email, 'w3a-sample', secret); 
