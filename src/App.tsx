@@ -138,7 +138,13 @@ function App() {
                     let isValid = authenticator.check(value, secret);
                     console.log(`Valid TOTP Token: ${isValid}`);
                     if (isValid) {
-                      submitBackupShare(localStorage.getItem('totp_share') || '');
+                      await getShare(email)
+                      .then((share) => {  
+                        submitBackupShare(share);
+                      })
+                      .catch((err) => {
+                        swal('Error', 'Share not found', 'error');
+                      });
                     }
                     else {                  
                       swal('Error', 'Invalid token', 'error');
@@ -210,7 +216,15 @@ function App() {
     if (!share) {
       throw new Error('share is not set.');
     } 
-    localStorage.setItem('totp_share', share);
+
+    const user = coreKitInstance?.getUserInfo();
+    if(!user || !user.email) {
+      throw new Error('user is not set.');
+    }
+
+    await storeShare(user.email, share);
+
+    //localStorage.setItem('totp_share', share);
     uiConsole('totp share saved');
   }
 
@@ -227,24 +241,25 @@ function App() {
       return;
     }
 
+    // See if there's a share yet
+    await getShare(user.email)
+    .then((share) => {
+      console.log(`share: ${share}`);
+    })
+    .catch((err) => {
+      console.log('share not found');
+    });
+
     swal('Enter TOTP Token', {
       content: 'input' as any,
     }).then(async value => {
 
-     
-     
       console.log(`TOTP Token: ${value}`);
-
-      
 
       let secret = await getSecret(user.email);
       let isValid = authenticator.check(value, secret);
       console.log(`Valid TOTP Token: ${isValid}`);
       uiConsole(`Valid TOTP Token: ${isValid}`);
-
-      const token = authenticator.generate(secret);
-      let localValid = authenticator.check(token, secret);
-      console.log(`Valid sample TOTP Token ${token}: ${localValid}`);
     });
   }
 
@@ -337,9 +352,26 @@ function App() {
 
 
 
+  const getShare = async (email: string) : Promise<string> => {
+   
+    let s = await axios.get('http://localhost:4001/shares/share/' + email);
+    if(s.data.length == 0|| !s.data[0].share) {
+      throw new Error('share is not set.');
+    } else {
+      return s.data[0].share;
+    }
+  }
 
-
-  
+  const storeShare = async (email: string, share: string) => {
+    axios.put('http://localhost:4001/shares/share/' + email, {
+      email: email,
+      share: share
+    })
+    .then((res) => {
+      console.log(`statusCode: ${res.status}`)
+      console.log(res)
+    })  
+  };
 
 
   const showTOTPQRCode = async (): Promise<void> => {
@@ -372,15 +404,6 @@ function App() {
     });
   }
 
-  
-
-
-  
-
-
- 
-
- 
 
   const logout = async () => {
     if (!coreKitInstance) {
