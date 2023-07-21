@@ -7,6 +7,7 @@ const helmet = require('helmet')
 
 // Import routes
 const usersRouter = require('./routes/users-route')
+const sharesRouter = require('./routes/shares-route')
 
 // Set default port for express app
 const PORT = process.env.PORT || 4001
@@ -24,6 +25,7 @@ app.use(bodyParser.json())
 
 // Implement books route
 app.use('/users', usersRouter)
+app.use('/shares', sharesRouter)  
 
 // Implement 500 error route
 app.use(function (err, req, res, next) {
