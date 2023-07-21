@@ -122,18 +122,28 @@ function App() {
             
 
               case "totpShare":
-                swal('Enter TOTP Token', {
+
+                swal('Enter email address', {
                   content: 'input' as any,
-                }).then(async value => {
-                  console.log(`TOTP Token: ${value}`);
-                  let isValid = authenticator.check(value, secret);
-                  console.log(`Valid TOTP Token: ${isValid}`);
-                  if (isValid) {
-                    submitBackupShare(localStorage.getItem('totp_share') || '');
-                  }
-                  else {                  
-                    swal('Error', 'Invalid token', 'error');
-                  }
+                }).then(async email => {
+
+
+                  swal('Enter TOTP Token', {
+                    content: 'input' as any,
+                  }).then(async value => {
+                    console.log(`TOTP Token: ${value}`);
+
+
+                    let secret = await getSecret(email);
+                    let isValid = authenticator.check(value, secret);
+                    console.log(`Valid TOTP Token: ${isValid}`);
+                    if (isValid) {
+                      submitBackupShare(localStorage.getItem('totp_share') || '');
+                    }
+                    else {                  
+                      swal('Error', 'Invalid token', 'error');
+                    }
+                  })
                 });
                 break;
 
@@ -166,6 +176,17 @@ function App() {
     if (!coreKitInstance) {
       throw new Error("coreKitInstance is not set");
     }
+
+    try {
+      const user = coreKitInstance?.getUserInfo();
+      if(user && user.email) {  
+        console.log('delete user secret');
+        await deleteSecret(user.email);  
+      }
+    } catch (error) {
+      console.log('No login context to delete secret');
+    }
+    
     await coreKitInstance.CRITICAL_resetAccount();
     uiConsole('reset account successful');
   }
@@ -194,11 +215,29 @@ function App() {
   }
 
   const checkTOTP = async (): Promise<void> => {
+
+    const user = coreKitInstance?.getUserInfo();
+    if(!user || !user.email) {  
+      throw new Error('user is not set.');  
+    }
+
+    let emailRegistered = await hasSecret(user.email);
+    if(!emailRegistered) {
+      await swal('Error', 'Email not registered. Scan QR code or create TOTP share', 'error');
+      return;
+    }
+
     swal('Enter TOTP Token', {
       content: 'input' as any,
     }).then(async value => {
+
+     
      
       console.log(`TOTP Token: ${value}`);
+
+      
+
+      let secret = await getSecret(user.email);
       let isValid = authenticator.check(value, secret);
       console.log(`Valid TOTP Token: ${isValid}`);
       uiConsole(`Valid TOTP Token: ${isValid}`);
@@ -241,9 +280,9 @@ function App() {
     return canvas;
   }
 
-  const getSecret = async (user: UserInfo) => {
+  const getSecret = async (email: string) : Promise<string>=> {
    
-    let s = await axios.get('http://localhost:4001/users/secret/' + user.email);
+    let s = await axios.get('http://localhost:4001/users/secret/' + email);
     if(s.data.length == 0|| !s.data[0].secret) {
       throw new Error('secret is not set.');
     } else {
@@ -251,8 +290,8 @@ function App() {
     }
   }
   
-  const hasSecret = async (user: UserInfo)  => {
-    getSecret(user)
+  const hasSecret = async (email: string):Promise<boolean>  => {
+    return getSecret(email)
     .then((secret) => {
       console.log('secret found')
       return true;
@@ -263,9 +302,9 @@ function App() {
     });
   }
 
-  const storeSecret = async (user: UserInfo, secret: string) => {
-    axios.put('http://localhost:4001/users/secret/' + user.email, {
-      email: user.email,
+  const storeSecret = async (email: string, secret: string) => {
+    axios.put('http://localhost:4001/users/secret/' + email, {
+      email: email,
       secret: secret
     })
     .then((res) => {
@@ -274,8 +313,16 @@ function App() {
     })  
   };
 
-  const getOrCreateSecret = async (user:UserInfo) : Promise<string> => {
-    return getSecret(user)
+  const deleteSecret = async (email: string) => {
+    axios.delete('http://localhost:4001/users/secret/' + email)
+    .then((res) => {
+      console.log(`statusCode: ${res.status}`)
+      console.log(res)
+    });
+  };
+
+  const getOrCreateSecret = async (email:string) : Promise<string> => {
+    return getSecret(email)
     .then((secret) => {
       console.log('secret found')
       return secret;
@@ -283,7 +330,7 @@ function App() {
     .catch( async (err) => {
       console.log('secret not found');
       let secret = authenticator.generateSecret();
-      await storeSecret(user, secret);
+      await storeSecret(email, secret);
       return secret;
     });
   };
@@ -301,7 +348,7 @@ function App() {
       throw new Error('user is not set.');  
     }
 
-    let secret = await getOrCreateSecret(user);
+    let secret = await getOrCreateSecret(user.email);
     console.log(secret);
 
     let otpauth = authenticator.keyuri(
