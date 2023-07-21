@@ -1,18 +1,12 @@
 import { useEffect, useState } from "react";
 import swal from "sweetalert";
-import { Web3AuthMPCCoreKit, WEB3AUTH_NETWORK, UserInfo } from "@web3auth/mpc-core-kit"
+import { Web3AuthMPCCoreKit, WEB3AUTH_NETWORK } from "@web3auth/mpc-core-kit"
 import Web3 from "web3";
 import "./App.css";
 import { QRCode, ErrorCorrectLevel} from 'qrcode-generator-ts/js';
 import { authenticator } from '@otplib/preset-default';
 import axios from 'axios'
-import { userInfo } from "os";
-import { get } from "http";
 
-
-// For demo - you'd want a secret per user
-//const secret = authenticator.generateSecret();
-const secret = 'MQMA6XZDEQ7T4ELV';
 
 const uiConsole = (...args: any[]): void => {
   const el = document.querySelector("#console>p");
@@ -205,9 +199,6 @@ function App() {
     uiConsole('deleted');
   }
     
-
- 
-
   const createTOTPShare = async (): Promise<void> => {
     if (!provider) {
       throw new Error('provider is not set.');
@@ -263,42 +254,10 @@ function App() {
     });
   }
 
-
-  function createCanvas(qr : QRCode, cellSize = 2, margin = cellSize * 4) {
-
-    var canvas = document.createElement('canvas');
-    var size = qr.getModuleCount() * cellSize + margin * 2;
-    canvas.width = size;
-    canvas.height = size;
-    var ctx = canvas.getContext('2d');
-    //check ctx is not null
-    if (!ctx) {
-      throw new Error('ctx is null');
-    }
-
-    // fill background
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, size, size);
-
-    // draw cells
-    ctx.fillStyle = '#000000';
-    for (var row = 0; row < qr.getModuleCount(); row += 1) {
-      for (var col = 0; col < qr.getModuleCount(); col += 1) {
-        if (qr.isDark(row, col) ) {
-          ctx.fillRect(
-            col * cellSize + margin,
-            row * cellSize + margin,
-            cellSize, cellSize);
-        }
-      }
-    }
-    return canvas;
-  }
-
   const getSecret = async (email: string) : Promise<string>=> {
    
     let s = await axios.get('http://localhost:4001/users/secret/' + email);
-    if(s.data.length == 0|| !s.data[0].secret) {
+    if(s.data.length === 0|| !s.data[0].secret) {
       throw new Error('secret is not set.');
     } else {
       return s.data[0].secret;
@@ -355,7 +314,7 @@ function App() {
   const getShare = async (email: string) : Promise<string> => {
    
     let s = await axios.get('http://localhost:4001/shares/share/' + email);
-    if(s.data.length == 0|| !s.data[0].share) {
+    if(s.data.length === 0|| !s.data[0].share) {
       throw new Error('share is not set.');
     } else {
       return s.data[0].share;
