@@ -552,15 +552,15 @@ function App() {
     <div className="container">
       <h1 className="title">
         <a target="_blank" href="https://web3auth.io/docs/guides/mpc" rel="noreferrer">
-        Web3Auth Core Kit MPC Beta Redirect
+        Web3Auth Core Kit MPC Beta 
         </a> {" "}
-        & ReactJS Ethereum Example
+        TOTP Recovery Demo
       </h1>
 
       <div className="grid">{provider ? loggedInView : unloggedInView}</div>
 
       <footer className="footer">
-        <a href="https://github.com/Web3Auth/web3auth-core-kit-examples/tree/main/tkey/tkey-mpc-beta-react-popup-example" target="_blank" rel="noopener noreferrer">
+        <a href="https://github.com/d-smith/w3a-sample" target="_blank" rel="noopener noreferrer">
           Source code
         </a>
       </footer>
